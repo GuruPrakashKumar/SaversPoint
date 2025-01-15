@@ -77,14 +77,15 @@ const Navber = (props) => {
             >
               Blog
             </span>
-            {!localStorage.getItem("userEmail") && (
+            {/* will be uncommented these lines after etsting */}
+            {/* {!localStorage.getItem("userEmail") && (
               <span
                 className="hover:bg-gray-200 px-4 py-3 rounded-lg font-light tracking-widest hover:text-gray-800 cursor-pointer"
                 onClick={() => history.push("/blogs/register")}
               >
                 Register for Blogs
               </span>
-            )}
+            )} */}
 
             <span
               className="hover:bg-gray-200 px-4 py-3 rounded-lg font-light tracking-widest hover:text-gray-800 cursor-pointer"

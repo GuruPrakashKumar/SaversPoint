@@ -8,13 +8,14 @@ import { getBrainTreeToken, getPaymentProcess } from "./FetchApi";
 import { fetchData, fetchbrainTree, pay } from "./Action";
 
 import DropIn from "braintree-web-drop-in-react";
+import { useSnackbar } from "notistack";
 
 const apiURL = process.env.REACT_APP_API_URL;
 
 export const CheckoutComponent = (props) => {
   const history = useHistory();
   const { data, dispatch } = useContext(LayoutContext);
-
+  const { enqueueSnackbar } = useSnackbar();
   const [state, setState] = useState({
     address: "",
     phone: "",
@@ -124,15 +125,17 @@ export const CheckoutComponent = (props) => {
                   />
                   <div
                     onClick={(e) =>
-                      pay(
-                        data,
-                        dispatch,
-                        state,
-                        setState,
-                        getPaymentProcess,
-                        totalCost,
-                        history
-                      )
+                      /*will be uncommented these lines after testing*/
+                      // pay(
+                      //   data,
+                      //   dispatch,
+                      //   state,
+                      //   setState,
+                      //   getPaymentProcess,
+                      //   totalCost,
+                      //   history
+                      // )
+                      enqueueSnackbar('Order Created Successfully..!', { variant: 'success' })
                     }
                     className="w-full px-4 py-2 text-center text-white font-semibold cursor-pointer"
                     style={{ background: "#303031" }}
