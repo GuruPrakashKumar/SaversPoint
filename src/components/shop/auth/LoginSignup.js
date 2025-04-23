@@ -1,11 +1,12 @@
 import React, { Fragment, useState, useContext } from "react";
 import Login from "./Login";
 import Signup from "./Signup";
+import { useHistory } from "react-router-dom"; 
 import { LayoutContext } from "../index";
 
 const LoginSignup = (props) => {
   const { data, dispatch } = useContext(LayoutContext);
-
+  const history = useHistory();
   const [login, setLogin] = useState(true);
   const [loginValue, setLoginValue] = useState("Create an account");
 
@@ -47,13 +48,16 @@ const LoginSignup = (props) => {
             <span className="border-b border-gray-500 w-full" />
           </div>
           <div
-            onClick={(e) => changeLoginSignup()}
+            onClick={(e) => {
+              loginSignupModalToggle();
+              history.push("/create-account");
+            }}
             style={{ color: "#303031", border: "1px solid #303031" }}
             className="px-4 py-2 font-medium text-center cursor-pointer"
           >
-            {loginValue}
+            Create an account
           </div>
-          {/*  Modal Close Button */}
+          {/* Modal Close Button */}
           <div className="absolute top-0 right-0 mx-4">
             <svg
               onClick={(e) => {

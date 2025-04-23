@@ -60,6 +60,9 @@ export const productReducer = (state, action) => {
           pQuantity: "",
           pPrice: "",
           pOffer: "",
+          frontImage: "",
+          deleteImages: null,
+          pNewImages: null,
         },
       };
     default:

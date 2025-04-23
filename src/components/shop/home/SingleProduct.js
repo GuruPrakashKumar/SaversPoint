@@ -37,37 +37,57 @@ const SingleProduct = (props) => {
   };
 
   if (data.loading) {
+    //skeleton ui
     return (
-      <div className="col-span-2 md:col-span-3 lg:col-span-4 flex items-center justify-center py-24">
-        <svg
-          className="w-12 h-12 animate-spin text-gray-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          ></path>
-        </svg>
-      </div>
+      <Fragment>
+        {[...Array(8)].map((_, index) => (
+          <div key={index} className="relative rounded border-2 px-1 py-1 col-span-1 m-1 animate-pulse">
+            {/* Image placeholder */}
+            <div className="w-full bg-gray-200" style={{ height: "160px" }}></div>
+            
+            {/* Product name placeholder */}
+            <div className="mt-2">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            </div>
+            
+            {/* Rating placeholder */}
+            <div className="flex items-center justify-between mt-2">
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              <div className="flex items-center space-x-1">
+                <div className="h-4 bg-gray-200 rounded w-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-4"></div>
+              </div>
+            </div>
+            
+            {/* Price placeholder */}
+            <div className="h-4 bg-gray-200 rounded w-1/3 mt-1"></div>
+            
+            {/* Wishlist icon placeholder */}
+            <div className="absolute top-0 right-0 mx-2 my-2 md:mx-4">
+              <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+            </div>
+          </div>
+        ))}
+      </Fragment>
     );
   }
+
+  // Filter products with active status
+  const activeProducts = products ? products.filter(product => product.pStatus === "Active") : [];
+
   return (
     <Fragment>
-      {products && products.length > 0 ? (
-        products.map((item, index) => {
+      {activeProducts && activeProducts.length > 0 ? (
+        activeProducts.map((item, index) => {
           return (
             <Fragment key={index}>
-              <div className="relative col-span-1 m-2">
+              <div className="relative rounded border-2 px-1 py-1 col-span-1 m-1">
                 <img
                   onClick={(e) => history.push(`/products/${item._id}`)}
                   className="w-full object-cover object-center cursor-pointer"
                   src={`${item.pImages[0]}`}
                   alt=""
+                  style={{ objectFit: "contain", width: "100%", height: "160px" }}//todo: fix this ui
                 />
                 <div className="flex items-center justify-between mt-2">
                   <div className="text-gray-600 font-light truncate">
@@ -138,7 +158,7 @@ const SingleProduct = (props) => {
         })
       ) : (
         <div className="col-span-2 md:col-span-3 lg:col-span-4 flex items-center justify-center py-24 text-2xl">
-          No product found
+          No active products found
         </div>
       )}
     </Fragment>

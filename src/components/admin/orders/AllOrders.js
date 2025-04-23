@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useEffect } from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 import moment from "moment";
 
 import { OrderContext } from "./index";
@@ -9,6 +9,24 @@ const apiURL = process.env.REACT_APP_API_URL;
 const AllCategory = (props) => {
   const { data, dispatch } = useContext(OrderContext);
   const { orders, loading } = data;
+  const [showModal, setShowModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+
+  const handleDeleteClick = (oid) => {
+    setOrderToDelete(oid);
+    setShowModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowModal(false);
+    setOrderToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (orderToDelete) {
+      deleteOrderReq(orderToDelete, dispatch, setShowModal);
+    }
+  };
 
   useEffect(() => {
     fetchData(dispatch);
@@ -44,7 +62,8 @@ const AllCategory = (props) => {
               <th className="px-4 py-2 border">Products</th>
               <th className="px-4 py-2 border">Status</th>
               <th className="px-4 py-2 border">Total</th>
-              <th className="px-4 py-2 border">Transaction Id</th>
+              <th className="px-4 py-2 border">Payment Id</th>
+              <th className="px-4 py-2 border">Order Id</th>
               <th className="px-4 py-2 border">Customer</th>
               <th className="px-4 py-2 border">Email</th>
               <th className="px-4 py-2 border">Phone</th>
@@ -61,6 +80,7 @@ const AllCategory = (props) => {
                   <CategoryTable
                     key={i}
                     order={item}
+                    deleteOrderReq={(oid) => handleDeleteClick(item._id)}
                     editOrder={(oId, type, status) =>
                       editOrderReq(oId, type, status, dispatch)
                     }
@@ -83,12 +103,34 @@ const AllCategory = (props) => {
           Total {orders && orders.length} order found
         </div>
       </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Confirm Deletion</h2>
+            <p className="mb-4">This action cannot be undone. Are you sure you want to delete this product?</p>
+            <div className="flex justify-end">
+              <button
+                onClick={handleCancelDelete}
+                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Fragment>
   );
 };
 
 /* Single Category Component */
-const CategoryTable = ({ order, editOrder }) => {
+const CategoryTable = ({ order, deleteOrderReq, editOrder }) => {
   const { dispatch } = useContext(OrderContext);
 
   return (
@@ -96,14 +138,16 @@ const CategoryTable = ({ order, editOrder }) => {
       <tr className="border-b">
         <td className="w-48 hover:bg-gray-200 p-2 flex flex-col space-y-1">
           {order.allProduct.map((product, i) => {
+            const productImage = product.id?.pImages?.[0] || "default-image-url"; // Provide a default image URL if pImages is null or undefined (in case of deleted product)
+            const productName = product.id?.pName || "Unknown Product"; // Provide a default name if pName is null or undefined
             return (
               <span className="block flex items-center space-x-2" key={i}>
                 <img
                   className="w-8 h-8 object-cover object-center"
-                  src={`${product.id.pImages[0]}`}
+                  src={`${productImage}`}
                   alt="productImage"
                 />
-                <span>{product.id.pName}</span>
+                <span>{productName}</span>
                 <span>{product.quantitiy}x</span>
               </span>
             );
@@ -140,7 +184,10 @@ const CategoryTable = ({ order, editOrder }) => {
           ₹{order.amount}.00
         </td>
         <td className="hover:bg-gray-200 p-2 text-center">
-          {order.transactionId}
+          {order.razorpay_payment_id}
+        </td>
+        <td className="hover:bg-gray-200 p-2 text-center">
+          {order.razorpay_order_id}
         </td>
         <td className="hover:bg-gray-200 p-2 text-center">{order.user.name}</td>
         <td className="hover:bg-gray-200 p-2 text-center">

@@ -19,6 +19,9 @@ import BlogsPage from "./blog/BlogsPage";
 import WriteBlogsPage from "./blog/WriteBlogs";
 import BlogRegistrationPage from "./blog/BlogRegistration";
 import IndividualBlogPage from "./blog/IndividualBlog";
+import CreateAccountPage from "./shop/auth/CreateAccount";
+import ForgotPassword from "./shop/auth/ForgotPassword";
+import CropImagePage from "./admin/products/CropImagePage";
 
 /* Routing All page will be here */
 const Routes = (props) => {
@@ -26,14 +29,17 @@ const Routes = (props) => {
     <Router>
       <Switch>
         {/* Shop & Public Routes */}
-        {/* <Route exact path="/contact-us" component={ContactUsPage}/> */}
+        <Route exact path="/contact-us" component={ContactUsPage}/>
         <Route exact path="/" component={Home} />
         <Route exact path="/wish-list" component={WishList} />
         <Route exact path="/products/:id" component={ProductDetails} />
-        {/* <Route exact path="/blogs" component={BlogsPage}/> */}
+        <Route exact path="/blogs" component={BlogsPage}/>
         <Route exact path="/blogs/write-blog" component={WriteBlogsPage}/>
         <Route exact path="/blogs/register" component={BlogRegistrationPage}/>
         <Route exact path="/blogs/get/:slug" component={IndividualBlogPage}/>
+        <Route path="/create-account" component={CreateAccountPage}/>
+        <Route path="/forgot-password" component={ForgotPassword}/>
+        <Route path="/image-crop" component={CropImagePage}/>
         <Route
           exact
           path="/products/category/:catId"

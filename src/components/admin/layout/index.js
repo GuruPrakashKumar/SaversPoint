@@ -9,13 +9,13 @@ const AdminLayout = ({ children }) => {
     <Fragment>
       <AdminNavber />
       <section className="flex bg-gray-100">
-        <AdminSidebar />
-        <div className="w-full md:w-11/12 h-full">
+        {/* <AdminSidebar /> */} {/*Removed Sidebar enhancing UI*/}
+        <div className="min-h-screen w-full h-full">
           {/* All Children pass from here */}
           {children}
         </div>
       </section>
-      <AdminFooter />
+      {/* <AdminFooter /> */}
     </Fragment>
   );
 };

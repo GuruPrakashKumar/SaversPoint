@@ -5,6 +5,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import Layout from "../layout";
 
 const ContactUs = () => {
+  const businessAddress = process.env.REACT_APP_BUSINESS_ADDRESS;
+  const businessPhone = process.env.REACT_APP_BUSINESS_PHONE;
+  const businessEmail = process.env.REACT_APP_BUSINESS_EMAIL;
+
   // State for form inputs
   const [formData, setFormData] = useState({
     name: "",
@@ -185,7 +189,7 @@ const ContactUs = () => {
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-800">Our Store</h3>
                 <p className="text-gray-600">
-                  Royalty More, South Bazar, Andal, West Bengal, PIN-713321
+                  {businessAddress}
                 </p>
               </div>
             </div>
@@ -210,7 +214,7 @@ const ContactUs = () => {
               </div>
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-800">Phone</h3>
-                <p className="text-gray-600">+91 6295459376</p>
+                <p className="text-gray-600">{businessPhone}</p>
               </div>
             </div>
 
@@ -234,7 +238,7 @@ const ContactUs = () => {
               </div>
               <div className="ml-4">
                 <h3 className="text-lg font-medium text-gray-800">Email</h3>
-                <p className="text-gray-600">hmonazir786@gmail.com</p>
+                <p className="text-gray-600">{businessEmail}</p>
               </div>
             </div>
           </div>

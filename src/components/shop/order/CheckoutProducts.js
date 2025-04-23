@@ -1,21 +1,100 @@
-import React, { Fragment, useEffect, useContext, useState } from "react";
+import React, { Fragment, useEffect, useContext, useState, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import { LayoutContext } from "../layout";
 import { subTotal, quantity, totalCost } from "../partials/Mixins";
 
 import { cartListProduct } from "../partials/FetchApi";
-import { getBrainTreeToken, getPaymentProcess } from "./FetchApi";
+import { createRazorpayOrder, fetchPayment, getBrainTreeToken, getPaymentProcess } from "./FetchApi";
 import { fetchData, fetchbrainTree, pay } from "./Action";
 
 import DropIn from "braintree-web-drop-in-react";
-import { useSnackbar } from "notistack";
 
+import GooglePayButton from "@google-pay/button-react";
+import { useToast } from "../../../context/ToastContext";
+import QRCode from "react-qr-code";
 const apiURL = process.env.REACT_APP_API_URL;
 
 export const CheckoutComponent = (props) => {
   const history = useHistory();
   const { data, dispatch } = useContext(LayoutContext);
-  const { enqueueSnackbar } = useSnackbar();
+  // const paymentUrl = 'https://pay.google.com/gp/v2/object/payment?amount=10.00&currency=INR&merchantId=BCR2DN4TX7P272AU'
+  let totalPrice = totalCost().toString()
+  const paymentUrl = `upi://pay?pa=guruprakash950@oksbi&pn=Guru%20Prakash&am=${totalPrice}&cu=INR&aid=uGICAgICX86axFg` //for showing qr code in checkout page
+  const [responseState, setResponseState] = useState([]);
+  const { showSuccessToast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const CUSTOMER_NAME = localStorage.getItem("name");
+  const CUSTOMER_EMAIL = localStorage.getItem("email");
+
+  const loadScript = (src) => {//for loading razorpay script
+    return new Promise((resolve)=>{
+      const script = document.createElement('script')
+      script.src = src;
+      script.onload = () =>{
+        resolve(true)
+      }
+      script.onerror = () =>{
+        resolve(true)
+      }
+      document.body.appendChild(script);
+    })
+  }
+
+  const createMyRazorpayOrder = async (amount) => {
+    createRazorpayOrder(amount).then((data) => {
+      // console.log('data after generating order id: ', data.order_id)
+      handleRazorpayScreen(data.amount, data.order_id)
+    })
+  }
+  const handleRazorpayScreen = async (amount, orderId) => {
+    const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+    if(!res){
+      alert('Razorpay SDK failed to load. Are you online?')
+      setIsLoading(false);
+      return
+    }
+    const options={
+      key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+      amount: amount,
+      name: process.env.REACT_APP_BUSINESS_NAME,
+      description: `Payment to ${process.env.REACT_APP_BUSINESS_NAME}`,
+      image: process.env.REACT_APP_FAVICON_URL,
+      order_id: orderId,
+      handler: function(response){
+        setResponseState(response)
+        const razorpay_payment_id = response.razorpay_payment_id;
+        const razorpay_order_id = response.razorpay_order_id;
+        const razorpay_signature = response.razorpay_signature;
+        fetchPayment(response.razorpay_payment_id).then((data) => {
+          if(data.status === 'captured'){
+            dispatch({ type: "loading", payload: true });
+            pay(data, dispatch, state, setState, history, razorpay_payment_id, razorpay_order_id, razorpay_signature, setIsLoading);
+            showSuccessToast('Order Placed Successfully')
+          }
+        })
+      },
+      prefill: {
+        name: CUSTOMER_NAME,
+        email: CUSTOMER_EMAIL,
+        contact: state.phone
+      },
+      theme: {
+        color: "#303031"
+      },
+      modal: {
+        ondismiss: function () {// button gets enabled when the popup is closed
+          setIsLoading(false);
+        },
+      },
+    }
+    const paymentObject = new window.Razorpay(options)
+    paymentObject.open()
+    paymentObject.on('payment.failed', function(response){
+      setIsLoading(false);//not needed because the razorpay window does not closes after payment failure
+    })
+  }
+
   const [state, setState] = useState({
     address: "",
     phone: "",
@@ -78,7 +157,7 @@ export const CheckoutComponent = (props) => {
                   )}
                   <div className="flex flex-col py-2">
                     <label htmlFor="address" className="pb-2">
-                      Dalivery Address
+                      Delivery Address
                     </label>
                     <input
                       value={state.address}
@@ -111,7 +190,7 @@ export const CheckoutComponent = (props) => {
                       type="number"
                       id="phone"
                       className="border px-4 py-2"
-                      placeholder="+880"
+                      placeholder="+91"
                     />
                   </div>
                   <DropIn
@@ -124,24 +203,71 @@ export const CheckoutComponent = (props) => {
                     onInstance={(instance) => (state.instance = instance)}
                   />
                   <div
-                    onClick={(e) =>
-                      /*will be uncommented these lines after testing*/
-                      // pay(
-                      //   data,
-                      //   dispatch,
-                      //   state,
-                      //   setState,
-                      //   getPaymentProcess,
-                      //   totalCost,
-                      //   history
-                      // )
-                      enqueueSnackbar('Order Created Successfully..!', { variant: 'success' })
-                    }
-                    className="w-full px-4 py-2 text-center text-white font-semibold cursor-pointer"
-                    style={{ background: "#303031" }}
+                    onClick={(e) =>{
+                      if(isLoading) return;
+                      setIsLoading(true);
+                      createMyRazorpayOrder(totalPrice)
+                    }}
+                    className={`w-full px-4 py-2 text-center text-white font-semibold cursor-pointer ${isLoading ? 'bg-gray-500' : 'bg-black'}`}
+                    style={{ background: isLoading ? '#d3d3d3' : '#303031' }}
+                    disabled={isLoading}
                   >
                     Pay now
                   </div>
+                  {/* <div>
+                    <GooglePayButton
+                      environment="TEST"
+                      buttonSizeMode="fill"
+                      paymentRequest={{
+                        apiVersion: 2,
+                        apiVersionMinor: 0,
+                        allowedPaymentMethods: [
+                          {
+                            type: 'CARD',
+                            parameters: {
+                              allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                              allowedCardNetworks: ['AMEX', 'DISCOVER', 'JCB', 'MASTERCARD', 'VISA'],
+                            },
+                            tokenizationSpecification: {
+                              type: 'PAYMENT_GATEWAY',
+                              parameters: {
+                                'gateway': 'example',
+                                'gatewaymerchantid': 'examplegatewaymerchantid',
+                              },
+                            },
+                          },
+                        ],
+                        merchantInfo: {
+                          merchantName: 'Guru Prakash Kumar',
+                        },
+                        transactionInfo: {
+                          totalPriceStatus: 'FINAL',
+                          totalPriceLabel: 'Total',
+                          totalPrice: totalCost().toString(),
+                          currencyCode: 'INR',
+                          countryCode: 'IN',
+                        },
+                        shippingAddressRequired: true,
+                      }}
+                      onLoadPaymentData={paymentData=>{
+                        console.log('TODO: send order to server', paymentData.paymentMethodData)
+                      }}
+                    />
+
+                  </div> */}
+                  {/* <div style={{ marginTop: '20px' }}>
+                    <h3>Pay Using QR Code</h3>
+                    <div style={{ height: "auto", margin: "20 auto", maxWidth: 100, width: "100%" }}>
+                      <QRCode
+                        size={256}
+                        style={{ height: "auto", maxWidth: "100%", width: "100%", marginTop: '20px' }}
+                        value={paymentUrl}
+                        viewBox={`0 0 256 256`}
+                        />
+                    </div>
+                    <h2>Do not pay using this QR code. This is for testing purpose</h2>
+                  </div> */}
+                  
                 </div>
               </Fragment>
             ) : (

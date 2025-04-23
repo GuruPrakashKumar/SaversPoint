@@ -11,6 +11,7 @@ import { cartListProduct } from "../partials/FetchApi";
 import { isWishReq, unWishReq, isWish } from "../home/Mixins";
 import { updateQuantity, slideImage, addToCart, cartList } from "./Mixins";
 import { totalCost } from "../partials/Mixins";
+import { useToast } from "../../../context/ToastContext";
 
 const apiURL = process.env.REACT_APP_API_URL;
 
@@ -22,7 +23,7 @@ const ProductDetailsSection = (props) => {
     useContext(LayoutContext); // Layout Context
 
   const sProduct = layoutData.singleProductDetail;
-  const [pImages, setPimages] = useState(null);
+  const [pImages, setPimages] = useState([]);
   const [count, setCount] = useState(0); // Slide change state
 
   const [quantitiy, setQuantitiy] = useState(1); // Increse and decrese quantity state
@@ -32,6 +33,7 @@ const ProductDetailsSection = (props) => {
     JSON.parse(localStorage.getItem("wishList"))
   ); // Wishlist State Control
 
+  const { showInfoToast } = useToast();
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,104 +76,169 @@ const ProductDetailsSection = (props) => {
 
   if (data.loading) {
     return (
-      <div className="col-span-2 md:col-span-3 lg:col-span-4 flex items-center justify-center h-screen">
-        <svg
-          className="w-12 h-12 animate-spin text-gray-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          ></path>
-        </svg>
-      </div>
+      <Fragment>
+        {/* Skeleton for Submenu */}
+        <div className="m-4 md:mx-12 md:my-6 animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+        </div>
+        
+        {/* Main Product Skeleton */}
+        <section className="m-4 md:mx-12 md:my-6 animate-pulse">
+          <div className="grid grid-cols-2 md:grid-cols-12 gap-4">
+            {/* Left side - thumbnails skeleton */}
+            <div className="hidden md:block md:col-span-1 md:flex md:flex-col md:space-y-4 md:mr-2">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="w-20 h-20 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+            
+            {/* Main image skeleton */}
+            <div className="col-span-2 md:col-span-7">
+              <div className="w-full h-96 bg-gray-200 rounded"></div>
+            </div>
+            
+            {/* Right side - product details skeleton */}
+            <div className="col-span-2 mt-8 md:mt-0 md:col-span-4 md:ml-6 lg:ml-12">
+              <div className="flex flex-col space-y-4">
+                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                
+                {/* Description skeleton */}
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/6"></div>
+                </div>
+                
+                {/* Quantity selector skeleton */}
+                <div className="border p-4">
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    <div className="flex space-x-4">
+                      <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                      <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Add to cart button skeleton */}
+                <div className="h-12 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Product details section two skeleton */}
+        <div className="m-4 md:mx-12 md:my-6 animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="space-y-2">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="h-4 bg-gray-200 rounded w-full"></div>
+            ))}
+          </div>
+        </div>
+      </Fragment>
     );
   } else if (!sProduct) {
     return <div>No product</div>;
   }
+
+  // Check if product is disabled
+  const isDisabled = sProduct.pStatus === "Disabled";
+  const isOutOfStock = sProduct.pQuantity === 0 || isDisabled;
+
   return (
     <Fragment>
       <Submenu
         value={{
-          categoryId: sProduct.pCategory._id,
+          categoryId: sProduct.pCategory?._id,
           product: sProduct.pName,
-          category: sProduct.pCategory.cName,
+          category: sProduct.pCategory?.cName || "", // unknown category
         }}
       />
-      <section className="m-4 md:mx-12 md:my-6">
+      <section className="m-4 md:mx-6 md:my-6">
         <div className="grid grid-cols-2 md:grid-cols-12">
+          {/* Desktop thumbnails (left side) */}
           <div className="hidden md:block md:col-span-1 md:flex md:flex-col md:space-y-4 md:mr-2">
-            <img
-              onClick={(e) =>
-                slideImage("increase", 0, count, setCount, pImages)
-              }
-              className={`${
-                count === 0 ? "" : "opacity-25"
-              } cursor-pointer w-20 h-20 object-cover object-center`}
-              src={`${sProduct.pImages[0]}`}
-              alt="pic"
-            />
-            <img
-              onClick={(e) =>
-                slideImage("increase", 1, count, setCount, pImages)
-              }
-              className={`${
-                count === 1 ? "" : "opacity-25"
-              } cursor-pointer w-20 h-20 object-cover object-center`}
-              src={`${sProduct.pImages[1]}`}
-              alt="pic"
-            />
+            {pImages && pImages !== null}
+            {pImages.length > 0 && pImages.map((image, index) => (
+              <img
+                key={index}
+                onClick={() => slideImage("increase", index, count, setCount, pImages)}
+                className={`${count === index ? "border-2 border-black" : "opacity-25 border"} rounded-lg cursor-pointer w-20 h-20 p-1 object-cover object-center`}
+                src={image}
+                alt={`pic-${index}`}
+              />
+            ))}
           </div>
+          {/* Main image section */}
           <div className="col-span-2 md:col-span-7">
             <div className="relative">
               <img
-                className="w-full"
+                className="w-full max-h-[500px] object-contain"
                 src={`${sProduct.pImages[count]}`}
-                alt="Pic"
+                alt="Main product image"
               />
               <div className="absolute inset-0 flex justify-between items-center mb-4">
-                <svg
-                  onClick={(e) =>
-                    slideImage("increase", null, count, setCount, pImages)
-                  }
-                  className="flex justify-center  w-12 h-12 text-gray-700 opacity-25 cursor-pointer hover:text-yellow-700 hover:opacity-100"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+                {/*Left arrow for sliding image*/}
+                <div
+                  onClick={(e) => slideImage("decrease", null, count, setCount, pImages)}
+                  className="absolute left-0 top-0 bottom-0 flex items-center justify-center w-12 h-full text-gray-700 opacity-25 cursor-pointer hover:text-yellow-700 hover:opacity-100"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                <svg
-                  onClick={(e) =>
-                    slideImage("increase", null, count, setCount, pImages)
-                  }
-                  className="flex justify-center  w-12 h-12 text-gray-700 opacity-25 cursor-pointer hover:text-yellow-700 hover:opacity-100"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+                  <svg
+                    className="w-12 h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </div>
+                {/*Right arrow for sliding image*/}
+                <div
+                  onClick={(e) => slideImage("increase", null, count, setCount, pImages)}
+                  className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-12 h-full text-gray-700 opacity-25 cursor-pointer hover:text-yellow-700 hover:opacity-100"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                  <svg
+                    className="w-12 h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
+            
+            {/* Mobile thumbnails (below main image) */}
+            <div className="md:hidden flex flex-wrap justify-center mt-4 gap-2">
+              {pImages.length > 0 && pImages.map((image, index) => (
+                <img
+                  key={index}
+                  onClick={() => slideImage("increase", index, count, setCount, pImages)}
+                  className={`${count === index ? "border-2 border-black" : "opacity-50 border"} rounded-lg cursor-pointer w-16 h-16 object-cover object-center`}
+                  src={image}
+                  alt={`Thumbnail ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
+          {/* Product details */}
           <div className="col-span-2 mt-8 md:mt-0 md:col-span-4 md:ml-6 lg:ml-12">
             <div className="flex flex-col leading-8">
               <div className="text-2xl tracking-wider">{sProduct.pName}</div>
@@ -182,9 +249,8 @@ const ProductDetailsSection = (props) => {
                 <span>
                   <svg
                     onClick={(e) => isWishReq(e, sProduct._id, setWlist)}
-                    className={`${
-                      isWish(sProduct._id, wList) && "hidden"
-                    } w-5 h-5 md:w-6 md:h-6 cursor-pointer text-yellow-700`}
+                    className={`${isWish(sProduct._id, wList) && "hidden"
+                      } w-5 h-5 md:w-6 md:h-6 cursor-pointer text-yellow-700`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -199,9 +265,8 @@ const ProductDetailsSection = (props) => {
                   </svg>
                   <svg
                     onClick={(e) => unWishReq(e, sProduct._id, setWlist)}
-                    className={`${
-                      !isWish(sProduct._id, wList) && "hidden"
-                    } w-5 h-5 md:w-6 md:h-6 cursor-pointer text-yellow-700`}
+                    className={`${!isWish(sProduct._id, wList) && "hidden"
+                      } w-5 h-5 md:w-6 md:h-6 cursor-pointer text-yellow-700`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"
@@ -221,23 +286,22 @@ const ProductDetailsSection = (props) => {
             <div className="my-4 md:my-6">
               {+quantitiy === +sProduct.pQuantity ? (
                 <span className="text-xs text-red-500">Stock limited</span>
+              ) : isDisabled ? (
+                <span className="text-xs text-red-500">Product unavailable</span>
               ) : (
                 ""
               )}
               <div
                 className={`flex justify-between items-center px-4 py-2 border ${
-                  +quantitiy === +sProduct.pQuantity && "border-red-500"
+                  (+quantitiy === +sProduct.pQuantity || isDisabled) && "border-red-500"
                 }`}
               >
-                <div
-                  className={`${
-                    quantitiy === sProduct.pQuantity && "text-red-500"
-                  }`}
-                >
+                <div className={`${quantitiy === sProduct.pQuantity || isDisabled ? "text-red-500" : ""}`}>
                   Quantity
                 </div>
+                
                 {/* Quantity Button */}
-                {sProduct.pQuantity !== 0 ? (
+                {!isOutOfStock ? (
                   <Fragment>
                     {layoutData.inCart == null ||
                     (layoutData.inCart !== null &&
@@ -360,10 +424,10 @@ const ProductDetailsSection = (props) => {
                     </span>
                   </div>
                 )}
-                {/* Quantity Button End */}
               </div>
-              {/* Incart and out of stock button */}
-              {sProduct.pQuantity !== 0 ? (
+              
+              {/* Add to cart button section */}
+              {!isOutOfStock ? (
                 <Fragment>
                   {layoutData.inCart !== null &&
                   layoutData.inCart.includes(sProduct._id) === true ? (
@@ -395,27 +459,14 @@ const ProductDetailsSection = (props) => {
                   )}
                 </Fragment>
               ) : (
-                <Fragment>
-                  {layoutData.inCart !== null &&
-                  layoutData.inCart.includes(sProduct._id) === true ? (
-                    <div
-                      style={{ background: "#303031" }}
-                      className={`px-4 py-2 text-white text-center cursor-not-allowed uppercase opacity-75`}
-                    >
-                      In cart
-                    </div>
-                  ) : (
-                    <div
-                      style={{ background: "#303031" }}
-                      disabled={true}
-                      className="px-4 py-2 text-white opacity-50 cursor-not-allowed text-center uppercase"
-                    >
-                      Out of stock
-                    </div>
-                  )}
-                </Fragment>
+                <div
+                  style={{ background: "#303031" }}
+                  disabled={true}
+                  className="px-4 py-2 text-white opacity-50 cursor-not-allowed text-center uppercase"
+                >
+                  Out of stock
+                </div>
               )}
-              {/* Incart and out of stock button End */}
             </div>
           </div>
         </div>

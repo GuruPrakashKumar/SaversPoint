@@ -10,6 +10,8 @@ const AllProduct = (props) => {
   const { products } = data;
 
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -38,9 +40,26 @@ const AllProduct = (props) => {
       console.log(deleteC.success);
       fetchData();
     }
+    setShowModal(false);
   };
 
-  /* This method call the editmodal & dispatch product context */
+  const handleDeleteClick = (pId) => {
+    setProductToDelete(pId);
+    setShowModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowModal(false);
+    setProductToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (productToDelete) {
+      deleteProductReq(productToDelete);
+    }
+  };
+
+    /* This method call the editmodal & dispatch product context */
   const editProduct = (pId, product, type) => {
     if (type) {
       dispatch({
@@ -78,7 +97,7 @@ const AllProduct = (props) => {
           <thead>
             <tr>
               <th className="px-4 py-2 border">Product</th>
-              <th className="px-4 py-2 border">Description</th>
+              <th className="px-4 py-2 border">Price</th>
               <th className="px-4 py-2 border">Image</th>
               <th className="px-4 py-2 border">Status</th>
               <th className="px-4 py-2 border">Stock</th>
@@ -98,7 +117,7 @@ const AllProduct = (props) => {
                     editProduct={(pId, product, type) =>
                       editProduct(pId, product, type)
                     }
-                    deleteProduct={(pId) => deleteProductReq(pId)}
+                    deleteProduct={(pId) => handleDeleteClick(pId)}
                     key={key}
                   />
                 );
@@ -119,6 +138,29 @@ const AllProduct = (props) => {
           Total {products && products.length} product found
         </div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Confirm Deletion</h2>
+            <p className="mb-4">This action cannot be undone. Are you sure you want to delete this product?</p>
+            <div className="flex justify-end">
+              <button
+                onClick={handleCancelDelete}
+                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Fragment>
   );
 };
@@ -130,11 +172,11 @@ const ProductTable = ({ product, deleteProduct, editProduct }) => {
       <tr>
         <td className="p-2 text-left">
           {product.pName.length > 15
-            ? product.pDescription.substring(1, 15) + "..."
+            ? product.pName.substring(1, 15) + "..."
             : product.pName}
         </td>
         <td className="p-2 text-left">
-          {product.pDescription.slice(0, 15)}...
+          ₹ {product.pPrice}
         </td>
         <td className="p-2 text-center">
           <img
@@ -155,7 +197,7 @@ const ProductTable = ({ product, deleteProduct, editProduct }) => {
           )}
         </td>
         <td className="p-2 text-center">{product.pQuantity}</td>
-        <td className="p-2 text-center">{product.pCategory.cName}</td>
+        <td className="p-2 text-center">{product.pCategory?.cName || "Unknown category"}</td>
         <td className="p-2 text-center">{product.pOffer}</td>
         <td className="p-2 text-center">
           {moment(product.createdAt).format("lll")}

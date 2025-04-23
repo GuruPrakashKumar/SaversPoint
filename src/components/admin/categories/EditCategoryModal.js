@@ -5,15 +5,16 @@ import { editCategory, getAllCategory } from "./FetchApi";
 const EditCategoryModal = (props) => {
   const { data, dispatch } = useContext(CategoryContext);
 
+  const [name, setName] = useState("");
   const [des, setDes] = useState("");
   const [status, setStatus] = useState("");
   const [cId, setCid] = useState("");
 
   useEffect(() => {
+    setName(data.editCategoryModal.name);
     setDes(data.editCategoryModal.des);
     setStatus(data.editCategoryModal.status);
     setCid(data.editCategoryModal.cId);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.editCategoryModal.modal]);
 
@@ -29,7 +30,7 @@ const EditCategoryModal = (props) => {
 
   const submitForm = async () => {
     dispatch({ type: "loading", payload: true });
-    let edit = await editCategory(cId, des, status);
+    let edit = await editCategory(cId, name, des, status); // Updated to include name
     if (edit.error) {
       console.log(edit.error);
       dispatch({ type: "loading", payload: false });
@@ -63,7 +64,7 @@ const EditCategoryModal = (props) => {
         <div className="relative bg-white w-11/12 md:w-3/6 shadow-lg flex flex-col items-center space-y-4  overflow-y-auto px-4 py-4 md:px-8">
           <div className="flex items-center justify-between w-full pt-4">
             <span className="text-left font-semibold text-2xl tracking-wider">
-              Add Category
+              Edit Category
             </span>
             {/* Close Modal */}
             <span
@@ -86,6 +87,18 @@ const EditCategoryModal = (props) => {
                 />
               </svg>
             </span>
+          </div>
+          <div className="flex flex-col space-y-1 w-full">
+            <label htmlFor="name">Category Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="px-4 py-2 border focus:outline-none"
+              type="text"
+              name="name"
+              id="name"
+              placeholder="Category name"
+            />
           </div>
           <div className="flex flex-col space-y-1 w-full">
             <label htmlFor="description">Category Description</label>
@@ -118,11 +131,12 @@ const EditCategoryModal = (props) => {
           </div>
           <div className="flex flex-col space-y-1 w-full pb-4 md:pb-6">
             <button
-              style={{ background: "#303031" }}
+              style={{ background: data.loading ? "#606060":"#303031" }}
               onClick={(e) => submitForm()}
-              className="rounded-full bg-gray-800 text-gray-100 text-lg font-medium py-2"
+              className={`px-4 py-2 rounded-full text-white ${data.loading ? "bg-gray-600 cursor-not-allowed" : "bg-black hover:bg-blue-600"}`}
+              disabled={data.loading}
             >
-              Create category
+              {data.loading ? "Updating..." : "Update category"}
             </button>
           </div>
         </div>

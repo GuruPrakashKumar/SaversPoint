@@ -52,12 +52,12 @@ export const createProduct = async ({
 };
 
 export const editProduct = async (product) => {
-  console.log(product);
+  // console.log(product);
   /* Most important part for updating multiple image  */
   let formData = new FormData();
-  if (product.pEditImages) {
-    for (const file of product.pEditImages) {
-      formData.append("pEditImages", file);
+  if (product.pNewImages) {
+    for (const file of product.pNewImages) {
+      formData.append("pNewImages", file);
     }
   }
   /* Most important part for updating multiple image  */
@@ -65,11 +65,13 @@ export const editProduct = async (product) => {
   formData.append("pName", product.pName);
   formData.append("pDescription", product.pDescription);
   formData.append("pStatus", product.pStatus);
-  formData.append("pCategory", product.pCategory._id);
+  formData.append("pCategory", product.pCategory._id?? product.pCategory);
   formData.append("pQuantity", product.pQuantity);
   formData.append("pPrice", product.pPrice);
   formData.append("pOffer", product.pOffer);
   formData.append("pImages", product.pImages);
+  formData.append("deleteImages", product.deleteImages);
+  formData.append("frontImage", product.frontImage)
 
   try {
     let res = await axios.post(`${apiURL}/api/product/edit-product`, formData);

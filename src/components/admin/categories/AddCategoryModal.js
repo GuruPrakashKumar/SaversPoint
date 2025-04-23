@@ -1,6 +1,7 @@
 import React, { Fragment, useContext, useState } from "react";
 import { CategoryContext } from "./index";
 import { createCategory, getAllCategory } from "./FetchApi";
+import CropImagePage from "../products/CropImagePage";
 
 const AddCategoryModal = (props) => {
   const { data, dispatch } = useContext(CategoryContext);
@@ -12,11 +13,15 @@ const AddCategoryModal = (props) => {
   const [fData, setFdata] = useState({
     cName: "",
     cDescription: "",
-    cImage: "",
+    cImage: null, // Initial value will be null
     cStatus: "Active",
     success: false,
     error: false,
   });
+
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const fetchData = async () => {
     let responseData = await getAllCategory();
@@ -33,6 +38,39 @@ const AddCategoryModal = (props) => {
       setFdata({ ...fData, success: false, error: false });
     }, 2000);
   }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file);
+      setImagePreview(previewURL);
+      setFdata({
+        ...fData,
+        cImage: file,
+        success: false,
+        error: false,
+      });
+    }
+  };
+
+  const handleImageClick = () => {
+    if (fData.cImage) {
+      setSelectedImage(fData.cImage);
+      setIsCropModalOpen(true);
+    }
+  };
+
+  const handleCropSubmit = (croppedBlob) => {
+    if (croppedBlob) {
+      const previewURL = URL.createObjectURL(croppedBlob);
+      setImagePreview(previewURL);
+      setFdata({
+        ...fData,
+        cImage: croppedBlob,
+      });
+    }
+    setIsCropModalOpen(false);
+  };
 
   const submitForm = async (e) => {
     dispatch({ type: "loading", payload: true });
@@ -53,11 +91,12 @@ const AddCategoryModal = (props) => {
           ...fData,
           cName: "",
           cDescription: "",
-          cImage: "",
+          cImage: null,
           cStatus: "Active",
           success: responseData.success,
           error: false,
         });
+        setImagePreview(null);
         dispatch({ type: "loading", payload: false });
         setTimeout(() => {
           setFdata({
@@ -169,16 +208,17 @@ const AddCategoryModal = (props) => {
             {/* Image Field & function */}
             <div className="flex flex-col space-y-1 w-full">
               <label htmlFor="name">Category Image</label>
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-16 h-16 object-cover cursor-pointer"
+                  onClick={handleImageClick}
+                />
+              )}
               <input
                 accept=".jpg, .jpeg, .png"
-                onChange={(e) => {
-                  setFdata({
-                    ...fData,
-                    success: false,
-                    error: false,
-                    cImage: e.target.files[0],
-                  });
-                }}
+                onChange={handleImageChange}
                 className="px-4 py-2 border focus:outline-none"
                 type="file"
               />
@@ -208,16 +248,40 @@ const AddCategoryModal = (props) => {
             </div>
             <div className="flex flex-col space-y-1 w-full pb-4 md:pb-6 mt-4">
               <button
-                style={{ background: "#303031" }}
+                style={{ background: data.loading ? "#606060" : "#303031" }}
                 type="submit"
-                className="bg-gray-800 text-gray-100 rounded-full text-lg font-medium py-2"
+                className={`px-4 py-2 rounded-full text-white ${
+                  data.loading ? "bg-gray-600 cursor-not-allowed" : "bg-black hover:bg-blue-600"
+                }`}
+                disabled={data.loading} // Disable the button when loading
               >
-                Create category
+                {data.loading ? "Creating..." : "Create category"}
               </button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Crop Image Modal */}
+      {isCropModalOpen && selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        >
+          <div className="bg-white p-4 rounded-lg shadow-lg relative w-5/6 md:w-1/2">
+            <button
+              onClick={() => setIsCropModalOpen(false)}
+              className="absolute top-2 right-2 text-gray-700"
+            >
+              ✖
+            </button>
+            <CropImagePage
+              img={selectedImage}
+              onClose={() => setIsCropModalOpen(false)}
+              onSubmit={handleCropSubmit}
+            />
+          </div>
+        </div>
+      )}
     </Fragment>
   );
 };

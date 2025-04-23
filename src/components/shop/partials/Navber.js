@@ -7,6 +7,9 @@ import { LayoutContext } from "../index";
 import { isAdmin } from "../auth/fetchApi";
 
 const Navber = (props) => {
+  const siteName = process.env.REACT_APP_BUSINESS_NAME;
+  const logoName = process.env.REACT_APP_LOGO_NAME;
+  
   const history = useHistory();
   const location = useLocation();
 
@@ -63,7 +66,7 @@ const Navber = (props) => {
     <Fragment>
       {/* Navber Section */}
       <nav className="fixed top-0 w-full z-20 shadow-lg lg:shadow-none bg-white">
-        <div className="m-4 md:mx-12 md:my-6 grid grid-cols-4 lg:grid-cols-3">
+        <div className="m-2 md:mx-12 md:my-6 grid grid-cols-4 lg:grid-cols-3">
           <div className="hidden lg:block col-span-1 flex text-gray-600 mt-1">
             <span
               className="hover:bg-gray-200 px-4 py-3 rounded-lg font-light tracking-widest hover:text-gray-800 cursor-pointer"
@@ -77,15 +80,14 @@ const Navber = (props) => {
             >
               Blog
             </span>
-            {/* will be uncommented these lines after etsting */}
-            {/* {!localStorage.getItem("userEmail") && (
+            {!localStorage.getItem("userEmail") && (
               <span
                 className="hover:bg-gray-200 px-4 py-3 rounded-lg font-light tracking-widest hover:text-gray-800 cursor-pointer"
                 onClick={() => history.push("/blogs/register")}
               >
                 Register for Blogs
               </span>
-            )} */}
+            )}
 
             <span
               className="hover:bg-gray-200 px-4 py-3 rounded-lg font-light tracking-widest hover:text-gray-800 cursor-pointer"
@@ -111,34 +113,61 @@ const Navber = (props) => {
                 d="M4 6h16M4 12h16M4 18h16"
               />
             </svg>
+            {/*if logo is not uploaded and env file is not updated then just show siteName*/}
+            {logoName !== "" ?
+              <div
+                onClick={() => history.push("/")}
+                className="lg:flex justify-center items-center ml-2 col-span-1 cursor-pointer"
+              >
+                <img
+                  src={`/${logoName}`} // <--- same path for desktop view
+                  alt="Site Logo"
+                  className="h-8 cursor-pointer"
+                />
+              </div>
+              :
+              <div
+                onClick={(e) => history.push("/")}
+                style={{ letterSpacing: "0.70rem" }}
+                className="hidden lg:block flex items-left col-span-1 text-center text-gray-800 font-bold tracking-widest uppercase text-xl cursor-pointer"
+              >
+                {siteName}
+              </div>
+            }
+          </div>
+          {/*if logo is not uploaded and env file is not updated then just show siteName*/}
+          {logoName !== "" ?
+            <div
+              onClick={() => history.push("/")}
+              className="hidden lg:flex justify-center items-center col-span-1 cursor-pointer"
+            >
+              <img
+                src={`/${logoName}`} // <--- same path for desktop view
+                alt="Site Logo"
+                className="h-10 cursor-pointer"
+              />
+            </div>
+            :
             <span
               onClick={(e) => history.push("/")}
               style={{ letterSpacing: "0.10rem" }}
-              className="flex items-left text-center font-bold uppercase text-gray-800 text-2xl cursor-pointer px-2 text-center"
+              className="flex items-left text-center font-bold uppercase text-gray-800 text-xl cursor-pointer px-2 text-center"
             >
-              Handy Buddy
+              {siteName}
             </span>
-          </div>
-          <div
-            onClick={(e) => history.push("/")}
-            style={{ letterSpacing: "0.70rem" }}
-            className="hidden lg:block flex items-left col-span-1 text-center text-gray-800 font-bold tracking-widest uppercase text-2xl cursor-pointer"
-          >
-            Handy Buddy
-          </div>
+          }
           <div className="flex items-right col-span-2 lg:col-span-1 flex justify-end">
             {/*  WishList Page Button */}
             <div
               onClick={(e) => history.push("/wish-list")}
-              className="hover:bg-gray-200 rounded-lg px-2 py-2 cursor-pointer"
+              className="hover:bg-gray-200 rounded-lg px-2 py-2 cursor-pointer flex"
               title="Wishlist"
             >
               <svg
-                className={`${
-                  location.pathname === "/wish-list"
-                    ? "fill-current text-gray-800"
-                    : ""
-                } w-8 h-8 text-gray-600 cursor-pointer`}
+                className={`${location.pathname === "/wish-list"
+                  ? "fill-current text-gray-800"
+                  : ""
+                  } w-8 h-8 text-black cursor-pointer`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -147,19 +176,20 @@ const Navber = (props) => {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1}
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                 />
               </svg>
+              <span className="ml-1 mt-1 text-black font-semibold hidden sm:block">Wishlist</span>
             </div>
             {localStorage.getItem("jwt") ? (
               <Fragment>
                 <div
-                  className="userDropdownBtn hover:bg-gray-200 px-2 py-2 rounded-lg relative"
-                  title="Logout"
+                  className="userDropdownBtn hover:bg-gray-200 px-2 py-2 rounded-lg relative flex center"
+                  title="Account"
                 >
                   <svg
-                    className="cursor-pointer w-8 h-8 text-gray-600 hover:text-gray-800"
+                    className="cursor-pointer w-8 h-8 text-black hover:text-gray-800"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -168,11 +198,12 @@ const Navber = (props) => {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1}
                       d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <div className="userDropdown absolute right-0 mt-1 bg-gray-200 rounded">
+                  <span className="ml-1 mt-1 text-black font-semibold hidden sm:block">Account</span>
+                  <div className="userDropdown absolute right-0 mt-10 bg-gray-200 rounded">
                     {!isAdmin() ? (
                       <Fragment>
                         <li className="flex flex-col text-gray-700 w-48 shadow-lg">
@@ -357,11 +388,11 @@ const Navber = (props) => {
               /* Login Modal Button */
               <div
                 onClick={(e) => loginModalOpen()}
-                className="cursor-pointer hover:bg-gray-200 px-2 py-2 rounded-lg"
+                className="cursor-pointer hover:bg-gray-200 px-2 py-2 rounded-lg flex"
                 title="Login"
               >
                 <svg
-                  className="w-8 h-8 text-gray-600 hover:text-gray-800"
+                  className="w-8 h-8 text-black hover:text-gray-800"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -374,16 +405,17 @@ const Navber = (props) => {
                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                   />
                 </svg>
+                <span className="ml-1 mt-1 text-black font-semibold hidden sm:block">Login</span>
               </div>
             )}
             {/* Cart Modal Button */}
             <div
               onClick={(e) => cartModalOpen()}
-              className="hover:bg-gray-200 px-2 py-2 rounded-lg relative cursor-pointer"
+              className="hover:bg-gray-200 px-2 py-2 rounded-lg relative cursor-pointer flex"
               title="Cart"
             >
               <svg
-                className="w-8 h-8 text-gray-600 hover:text-gray-800"
+                className="w-8 h-8 text-black-600 hover:text-gray-800"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -392,13 +424,14 @@ const Navber = (props) => {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1}
                   d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                 />
               </svg>
               <span className="absolute top-0 ml-6 mt-1 bg-yellow-700 rounded px-1 text-white text-xs hover:text-gray-200 font-semibold">
                 {data.cartProduct !== null ? data.cartProduct.length : 0}
               </span>
+              <span className="ml-2 mt-1 text-black font-semibold hidden sm:block">Cart</span>
             </div>
           </div>
         </div>
@@ -425,7 +458,7 @@ const Navber = (props) => {
               Blog
             </span>
             {!localStorage.getItem("userEmail") &&
-                <span
+              <span
                 className="font-medium text-lg tracking-widest hover:text-gray-800 hover:bg-gray-200 px-3 py-2 rounded-lg cursor-pointer"
                 onClick={(e) => navigateAndCloseNavber("/blogs/register")}>Register for Blogs</span>
             }

@@ -1,5 +1,5 @@
 import { createOrder } from "./FetchApi";
-
+import { totalCost } from "../partials/Mixins";
 export const fetchData = async (cartListProduct, dispatch) => {
   dispatch({ type: "loading", payload: true });
   try {
@@ -35,12 +35,12 @@ export const pay = async (
   dispatch,
   state,
   setState,
-  getPaymentProcess,
-  totalCost,
-  history
+  history,
+  razorpay_payment_id,
+  razorpay_order_id,
+  razorpay_signature,
+  setIsLoading
 ) => {
-  console.log("state: ");
-  console.log(state);
   if (!state.address) {
     setState({ ...state, error: "Please provide your address" });
   } else if (!state.phone) {
@@ -50,27 +50,33 @@ export const pay = async (
       allProduct: JSON.parse(localStorage.getItem("cart")),
       user: JSON.parse(localStorage.getItem("jwt")).user._id,
       amount: totalCost(),
-      transactionId: Date.now().toString(),
+      razorpay_payment_id: razorpay_payment_id,
+      razorpay_order_id: razorpay_order_id,
+      razorpay_signature: razorpay_signature,
       address: state.address,
       phone: state.phone,
     };
-    try {
-      let resposeData = await createOrder(orderData);
-      if (resposeData.success) {
-        localStorage.setItem("cart", JSON.stringify([]));
-        dispatch({ type: "cartProduct", payload: null });
-        dispatch({ type: "cartTotalCost", payload: null });
-        dispatch({ type: "orderSuccess", payload: true });
-        setState({ clientToken: "", instance: {} });
-        dispatch({ type: "loading", payload: false });
-        return history.push("/");
-      } else if (resposeData.error) {
-        console.log(resposeData.error);
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    
+     try {
+       let resposeData = await createOrder(orderData);
+       if (resposeData.success) {
+         localStorage.setItem("cart", JSON.stringify([]));
+         dispatch({ type: "cartProduct", payload: null });
+         dispatch({ type: "cartTotalCost", payload: null });
+         dispatch({ type: "orderSuccess", payload: true });
+         setState({ clientToken: "", instance: {} });
+         dispatch({ type: "loading", payload: false });
+         return history.push("/");
+       } else if (resposeData.error) {
+         console.log(resposeData.error);
+       }
+     } catch (error) {
+       console.log(error);
+     } finally{
+      setIsLoading(false);
+     }
   }
+
   // } else {
   //   let nonce;
   //   state.instance

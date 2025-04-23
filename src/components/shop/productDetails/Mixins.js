@@ -37,8 +37,9 @@ export const updateQuantity = (
 };
 
 export const slideImage = (type, active, count, setCount, pImages) => {
-  if (active === count) {
-    return true;
+  if (active !== null && active !== undefined) {
+    setCount(active);
+    return;
   }
   if (type === "increase") {
     if (count === pImages.length - 1) {
@@ -46,7 +47,14 @@ export const slideImage = (type, active, count, setCount, pImages) => {
     } else if (count < pImages.length) {
       setCount(count + 1);
     }
+  }else if (type === "decrease") {
+    if (count === 0) {
+      setCount(pImages.length - 1);
+    } else if (count < pImages.length) {
+      setCount(count - 1);
+    }
   }
+
 };
 
 export const inCart = (id) => {

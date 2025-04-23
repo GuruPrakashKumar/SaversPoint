@@ -2,7 +2,10 @@ import React, { Fragment, useState, useContext } from "react";
 import { loginReq } from "./fetchApi";
 import { LayoutContext } from "../index";
 import { useSnackbar } from 'notistack';
+import { useHistory } from "react-router-dom";
 const Login = (props) => {
+  const history = useHistory();
+
   const { data: layoutData, dispatch: layoutDispatch } = useContext(
     LayoutContext
   );
@@ -103,7 +106,7 @@ const Login = (props) => {
               Remember me<span className="text-sm text-gray-600">*</span>
             </label>
           </div>
-          <a className="block text-gray-600" href="/">
+          <a className="block text-blue-600 hover:text-blue-800 text-sm font-medium cursor-pointer" onClick={()=> history.push('/forgot-password')}>
             Lost your password?
           </a>
         </div>

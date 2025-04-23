@@ -1,4 +1,4 @@
-import React, { Fragment, useContext, useEffect } from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
 import { getAllCategory, deleteCategory } from "./FetchApi";
 import { CategoryContext } from "./index";
 import moment from "moment";
@@ -8,6 +8,9 @@ const apiURL = process.env.REACT_APP_API_URL;
 const AllCategory = (props) => {
   const { data, dispatch } = useContext(CategoryContext);
   const { categories, loading } = data;
+
+  const [showModal, setShowModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -36,14 +39,32 @@ const AllCategory = (props) => {
       console.log(deleteC.success);
       fetchData();
     }
+    setShowModal(false);
+  };
+
+  const handleDeleteClick = (cId) => {
+    setCategoryToDelete(cId);
+    setShowModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowModal(false);
+    setCategoryToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      deleteCategoryReq(categoryToDelete);
+    }
   };
 
   /* This method call the editmodal & dispatch category context */
-  const editCategory = (cId, type, des, status) => {
+  const editCategory = (cId, type,name, des, status) => {
     if (type) {
       dispatch({
         type: "editCategoryModalOpen",
         cId: cId,
+        name: name,
         des: des,
         status: status,
       });
@@ -54,16 +75,16 @@ const AllCategory = (props) => {
     return (
       <div className="flex items-center justify-center p-8">
         <svg
-          class="w-12 h-12 animate-spin text-gray-600"
+          className="w-12 h-12 animate-spin text-gray-600"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
           ></path>
         </svg>
@@ -92,10 +113,10 @@ const AllCategory = (props) => {
                 return (
                   <CategoryTable
                     category={item}
-                    editCat={(cId, type, des, status) =>
-                      editCategory(cId, type, des, status)
+                    editCat={(cId, type, name, des, status) =>
+                      editCategory(cId, type, name, des, status)
                     }
-                    deleteCat={(cId) => deleteCategoryReq(cId)}
+                    deleteCat={(cId) => handleDeleteClick(cId)}
                     key={key}
                   />
                 );
@@ -116,6 +137,32 @@ const AllCategory = (props) => {
           Total {categories && categories.length} category found
         </div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Confirm Deletion</h2>
+            <p className="mb-4">
+              This action cannot be undone. Are you sure you want to delete this
+              category?
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={handleCancelDelete}
+                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Fragment>
   );
 };
@@ -165,6 +212,7 @@ const CategoryTable = ({ category, deleteCat, editCat }) => {
               editCat(
                 category._id,
                 true,
+                category.cName,
                 category.cDescription,
                 category.cStatus
               )
