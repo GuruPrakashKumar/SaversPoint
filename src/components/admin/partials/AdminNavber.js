@@ -193,6 +193,21 @@ const AdminNavber = (props) => {
             <OrdersIcon />
             <span className="ml-1 text-black font-semibold hidden sm:block">Orders</span>
           </div>
+          <div
+            onClick={() => history.push("/admin/dashboard/bids")}
+            className={`hover:bg-gray-200 cursor-pointer py-2 px-2 rounded-lg flex items-center ${
+              location.pathname === "/admin/dashboard/bids" ? "bg-gray-200" : ""
+            }`}
+            title="Bids"
+          >
+            {/* Bargain Icon present in public folder */}
+            <img
+              src="/bargain_icon.png"
+              alt="Bargain Icon"
+              className="w-6 h-6"
+            />
+            <span className="ml-1 text-black font-semibold hidden sm:block">Bids</span>
+          </div>
           {/* Logout Button Dropdown */}
           <div
             className="userDropdownBtn hover:bg-gray-200 px-2 py-2 rounded-lg relative"

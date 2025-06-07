@@ -1,6 +1,6 @@
 import React, { Fragment, useContext, useState, useEffect } from "react";
 import { ProductContext } from "./index";
-import { editProduct, getAllProduct } from "./FetchApi";
+import { editProduct, getAllProductOfSeller } from "./FetchApi";
 import { getAllCategory } from "../categories/FetchApi";
 import { Trash2 } from "lucide-react";
 import { useToast } from "../../../context/ToastContext";
@@ -135,7 +135,7 @@ const EditProductModal = (props) => {
   }, [data.editProductModal]);
 
   const fetchData = async () => {
-    let responseData = await getAllProduct();
+    let responseData = await getAllProductOfSeller();
     if (responseData && responseData.Products) {
       dispatch({
         type: "fetchProductsAndChangeState",

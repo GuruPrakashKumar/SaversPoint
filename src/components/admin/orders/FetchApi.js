@@ -3,7 +3,9 @@ const apiURL = process.env.REACT_APP_API_URL;
 
 export const getAllOrder = async () => {
   try {
-    let res = await axios.get(`${apiURL}/api/order/get-all-orders`);
+    let sellerId = JSON.parse(localStorage.getItem("jwt")).user._id;
+    
+    let res = await axios.post(`${apiURL}/api/order/get-all-orders`, { sellerId });
     return res.data;
   } catch (error) {
     console.log(error);

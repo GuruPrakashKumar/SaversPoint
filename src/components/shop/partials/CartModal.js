@@ -10,7 +10,7 @@ const apiURL = process.env.REACT_APP_API_URL;
 
 const CartModal = () => {
   const history = useHistory();
-
+  let cart = JSON.parse(localStorage.getItem("cart"));
   const { data, dispatch } = useContext(LayoutContext);
   const products = data.cartProduct;
 
@@ -95,6 +95,9 @@ const CartModal = () => {
               {products &&
                 products.length !== 0 &&
                 products.map((item, index) => {
+                  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+                  const cartItem = cart.find(cartItem => cartItem.id === item._id);
+                  const itemPrice = cartItem ? cartItem.price : item.pPrice;
                   return (
                     <Fragment key={index}>
                       {/* Cart Product Start */}
@@ -122,7 +125,7 @@ const CartModal = () => {
                               <span className="text-sm text-gray-400">
                                 Subtotoal :
                               </span>{" "}
-                              ₹{subTotal(item._id, item.pPrice)}.00
+                              ₹{subTotal(item._id, itemPrice)}.00
                             </div>{" "}
                             {/* SUbtotal Count */}
                           </div>

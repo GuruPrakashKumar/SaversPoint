@@ -303,6 +303,9 @@ const CheckoutProducts = ({ products }) => {
       <div className="grid grid-cols-2 md:grid-cols-1">
         {products !== null && products.length > 0 ? (
           products.map((product, index) => {
+            const cart = JSON.parse(localStorage.getItem("cart")) || [];
+            const cartItem = cart.find(cartItem => cartItem.id === product._id);
+            const productPrice = cartItem ? cartItem.price : product.pPrice;
             return (
               <div
                 key={index}
@@ -319,13 +322,13 @@ const CheckoutProducts = ({ products }) => {
                     {product.pName}
                   </div>
                   <div className="md:ml-6 font-semibold text-gray-600 text-sm">
-                    Price : ₹{product.pPrice}.00{" "}
+                    Price : ₹{productPrice}.00{" "}
                   </div>
                   <div className="md:ml-6 font-semibold text-gray-600 text-sm">
                     Quantitiy : {quantity(product._id)}
                   </div>
                   <div className="font-semibold text-gray-600 text-sm">
-                    Subtotal : ₹{subTotal(product._id, product.pPrice)}.00
+                    Subtotal : ₹{subTotal(product._id, productPrice)}.00
                   </div>
                 </div>
               </div>

@@ -5,13 +5,14 @@ import { LayoutContext } from "../layout";
 import Submenu from "./Submenu";
 import ProductDetailsSectionTwo from "./ProductDetailsSectionTwo";
 
-import { getSingleProduct } from "./FetchApi";
+import { getBidForUser, getSingleProduct } from "./FetchApi";
 import { cartListProduct } from "../partials/FetchApi";
 
 import { isWishReq, unWishReq, isWish } from "../home/Mixins";
 import { updateQuantity, slideImage, addToCart, cartList } from "./Mixins";
 import { totalCost } from "../partials/Mixins";
 import { useToast } from "../../../context/ToastContext";
+import { bidSubmitHanlder, updateBid } from "./Action";
 
 const apiURL = process.env.REACT_APP_API_URL;
 
@@ -29,6 +30,19 @@ const ProductDetailsSection = (props) => {
   const [quantitiy, setQuantitiy] = useState(1); // Increse and decrese quantity state
   const [, setAlertq] = useState(false); // Alert when quantity greater than stock
 
+  const [inputBidPrice, setInputBidPrice] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fData, setFdata] = useState({
+      bId: "",
+      userBid: inputBidPrice,
+      sellerBid: 0,
+      bUser: "",
+      bStatus: "",
+      bSeller: "",
+      product: "",
+      success: false,
+      error: false,
+    });
   const [wList, setWlist] = useState(
     JSON.parse(localStorage.getItem("wishList"))
   ); // Wishlist State Control
@@ -36,9 +50,32 @@ const ProductDetailsSection = (props) => {
   const { showInfoToast } = useToast();
   useEffect(() => {
     fetchData();
+    fetchBidData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+  const fetchBidData = async () => {
+    console.log('fetching bid data')
+    setIsLoading(true);
+    try {
+      const response = await getBidForUser(id);
+      if (response.message =="Bid found") {
+        setFdata({
+          ...fData,
+          bId: response.bid._id,
+          userBid: response.bid.userBid,
+          sellerBid: response.bid.sellerBid,
+          bUser: response.bid.bUser,
+          bStatus: response.bid.bStatus,
+          bSeller: response.bid.bSeller,
+          product: response.bid.product,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
   const fetchData = async () => {
     dispatch({ type: "loading", payload: true });
     try {
@@ -73,8 +110,29 @@ const ProductDetailsSection = (props) => {
       console.log(error);
     }
   };
+  const handleBidButton = async () => {
+    setIsLoading(true);
+    const updatedFData = {
+      ...fData,
+      userBid: inputBidPrice,
+      bSeller: sProduct.pSeller,
+      product: sProduct._id,
+    };
+    setFdata(updatedFData);
+    try {
+      if(updatedFData.bId){
+        await updateBid(updatedFData, setFdata, fetchBidData);
+      }else{
+        await bidSubmitHanlder(updatedFData, setFdata, fetchBidData);
+      }
+    } catch (error) {
+      console.error("Error in bid submission:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  if (data.loading) {
+  if (data.loading) {//shimmer
     return (
       <Fragment>
         {/* Skeleton for Submenu */}
@@ -465,6 +523,100 @@ const ProductDetailsSection = (props) => {
                   className="px-4 py-2 text-white opacity-50 cursor-not-allowed text-center uppercase"
                 >
                   Out of stock
+                </div>
+              )}
+            </div>
+            <div>
+              {/* bidding system */}
+              <h6 className="text-xl font-medium mb-2">Bid Your Price</h6>
+              
+              {fData.bStatus === "accepted" ? (
+                <div className="mb-4 p-4 bg-green-50 rounded-md border border-green-200">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p className="text-green-800 font-medium">Seller has accepted your bid of ₹{fData.userBid}</p>
+                  </div>
+                  <p className="text-sm text-green-700 mt-1">You can now purchase this item at your bid price</p>
+                  <button
+                    onClick={(e) =>
+                      addToCart(
+                        sProduct._id,
+                        quantitiy,
+                        fData.userBid, // Using bid price instead of original price
+                        layoutDispatch,
+                        setQuantitiy,
+                        setAlertq,
+                        fetchData,
+                        totalCost
+                      )
+                    }
+                    style={{ background: "#303031" }}
+                    className="mt-3 px-4 py-2 text-white text-center cursor-pointer uppercase rounded-md"
+                  >
+                    Add to Cart at ₹{fData.userBid}
+                  </button>
+                </div>
+              ) : fData.bStatus === "rejected" ? (
+                <div className="mb-4 p-4 bg-red-50 rounded-md border border-red-200">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <p className="text-red-800 font-medium">Seller has declined your bid of ₹{fData.userBid}</p>
+                  </div>
+                  <p className="text-sm text-red-700 mt-1">You can place another bid or purchase at the original price</p>
+                </div>
+              ) : fData.bStatus === "countered" ? (
+                <div className="mb-4 p-4 bg-blue-50 rounded-md border border-blue-200">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <p className="text-blue-800 font-medium">Seller countered with ₹{fData.sellerBid}</p>
+                  </div>
+                  <p className="text-sm text-blue-700 mt-1">You can accept this offer or place a new bid</p>
+                </div>
+              ) : null}
+
+              {fData.bStatus !== "accepted" && (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      placeholder="Enter your bid price"
+                      value={inputBidPrice}
+                      onChange={(e) => setInputBidPrice(e.target.value)}
+                      className={`w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    />
+                    <button
+                      onClick={handleBidButton}
+                      disabled={isLoading}
+                      className={`px-4 py-2 rounded-md text-white ${
+                        isLoading
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-green-500 hover:bg-green-600"
+                      }`}
+                    >
+                      {isLoading ? "Processing..." : "Place Bid"}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {!inputBidPrice 
+                      ? "Enter your bid amount" 
+                        : "Seller will review your bid and respond soon"}
+                  </p>
+                </div>
+              )}
+
+              {fData.userBid && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                  <p className="font-medium">Your Bid: ₹{fData.userBid}</p>
+                  {fData.sellerBid && <p className="text-sm">Seller's Counter: ₹{fData.sellerBid}</p>}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Status: {fData.bStatus.charAt(0).toUpperCase() + fData.bStatus.slice(1)}
+                  </p>
                 </div>
               )}
             </div>

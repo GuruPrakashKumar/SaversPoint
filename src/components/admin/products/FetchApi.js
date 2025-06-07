@@ -10,6 +10,17 @@ export const getAllProduct = async () => {
   }
 };
 
+export const getAllProductOfSeller = async () => {
+  try {
+    let pSeller = JSON.parse(localStorage.getItem("jwt")).user._id;
+    let res = await axios.post(`${apiURL}/api/product/all-product-of-seller`, {
+      pSeller,
+    });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
 export const createPorductImage = async ({ pImage }) => {
   /* Most important part for uploading multiple image  */
   let formData = new FormData();
@@ -42,7 +53,9 @@ export const createProduct = async ({
   formData.append("pQuantity", pQuantity);
   formData.append("pPrice", pPrice);
   formData.append("pOffer", pOffer);
-
+  //todo: add pUser object id
+  let uId = JSON.parse(localStorage.getItem("jwt")).user._id;
+  formData.append("pSeller", uId);
   try {
     let res = await axios.post(`${apiURL}/api/product/add-product`, formData);
     return res.data;

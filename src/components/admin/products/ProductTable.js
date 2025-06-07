@@ -1,5 +1,5 @@
 import React, { Fragment, useContext, useEffect, useState } from "react";
-import { getAllProduct, deleteProduct } from "./FetchApi";
+import { deleteProduct, getAllProductOfSeller } from "./FetchApi";
 import moment from "moment";
 import { ProductContext } from "./index";
 
@@ -20,7 +20,7 @@ const AllProduct = (props) => {
 
   const fetchData = async () => {
     setLoading(true);
-    let responseData = await getAllProduct();
+    let responseData = await getAllProductOfSeller();
     setTimeout(() => {
       if (responseData && responseData.Products) {
         dispatch({

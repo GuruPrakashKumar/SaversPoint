@@ -29,3 +29,30 @@ export const postDeleteReview = async (formData) => {
     console.log(error);
   }
 };
+
+export const postPlaceBid = async (formData) => {
+  try {
+    let res = await axios.post(`${apiURL}/api/bid/place-bid`, formData);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+export const postUpdateBid = async (formData) => {
+  try {
+    let res = await axios.post(`${apiURL}/api/bid/update-bid`, formData);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}
+// get bid using product id for buyer view
+export const getBidForUser = async (productId) => {
+  try {
+    const userId = JSON.parse(localStorage.getItem("jwt")).user._id;
+    let res = await axios.post(`${apiURL}/api/bid/user-product-bid/${productId}`, { userId });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+}

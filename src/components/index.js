@@ -10,7 +10,7 @@ import {
   ProductByCategory,
   CheckoutPage,
 } from "./shop";
-import { DashboardAdmin, Categories, Products, Orders } from "./admin";
+import { DashboardAdmin, Categories, Products, Orders, Bids } from "./admin";
 import { UserProfile, UserOrders, SettingUser } from "./shop/dashboardUser";
 
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
@@ -22,6 +22,7 @@ import IndividualBlogPage from "./blog/IndividualBlog";
 import CreateAccountPage from "./shop/auth/CreateAccount";
 import ForgotPassword from "./shop/auth/ForgotPassword";
 import CropImagePage from "./admin/products/CropImagePage";
+import RespondBid from "./admin/bids/RespondToBid";
 
 /* Routing All page will be here */
 const Routes = (props) => {
@@ -72,6 +73,16 @@ const Routes = (props) => {
           exact={true}
           path="/admin/dashboard/orders"
           component={Orders}
+        />
+        <AdminProtectedRoute
+          exact={true}
+          path="/admin/dashboard/bids"
+          component={Bids}
+        />
+        <AdminProtectedRoute
+          exact={true}
+          path="/admin/dashboard/bids/respondBid/:bidId"
+          component={RespondBid}
         />
         {/* Admin Routes End */}
 

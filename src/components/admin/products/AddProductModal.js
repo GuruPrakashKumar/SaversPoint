@@ -1,6 +1,6 @@
 import React, { Fragment, useContext, useEffect, useState } from "react";
 import { ProductContext } from "./index";
-import { createProduct, getAllProduct } from "./FetchApi";
+import { createProduct, getAllProductOfSeller } from "./FetchApi";
 import { getAllCategory } from "../categories/FetchApi";
 import CropImagePage from "./CropImagePage"; // Import the CropImagePage component
 import { Trash2 } from "lucide-react";
@@ -34,7 +34,7 @@ const AddProductDetail = ({ categories }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(null);
 
   const fetchData = async () => {
-    let responseData = await getAllProduct();
+    let responseData = await getAllProductOfSeller();
     setTimeout(() => {
       if (responseData && responseData.Products) {
         dispatch({

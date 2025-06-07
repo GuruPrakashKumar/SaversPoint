@@ -138,6 +138,7 @@ const CategoryTable = ({ order, deleteOrderReq, editOrder }) => {
       <tr className="border-b">
         <td className="w-48 hover:bg-gray-200 p-2 flex flex-col space-y-1">
           {order.allProduct.map((product, i) => {
+            console.log('order ',order)
             const productImage = product.id?.pImages?.[0] || "default-image-url"; // Provide a default image URL if pImages is null or undefined (in case of deleted product)
             const productName = product.id?.pName || "Unknown Product"; // Provide a default name if pName is null or undefined
             return (
