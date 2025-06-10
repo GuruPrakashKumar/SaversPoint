@@ -5,6 +5,7 @@ import OpenAI from "openai";
 import axios from 'axios';
 import Layout from '../shop/layout';
 import { useHistory } from "react-router-dom";
+import { GoogleGenAI } from "@google/genai";
 
 const inputStyle = {
   width: '100%',
@@ -43,37 +44,43 @@ const WriteBlogs = () => {
   const [apiKey, setApiKey] = useState('');
   const [image, setImage] = useState(null);
   const [keypoints, setKeypoints] = useState('');
-  const [maxTokens, setMaxTokens] = useState(400);
+  const [maxTokens, setMaxTokens] = useState(200);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const ai = new GoogleGenAI({apiKey: process.env.REACT_APP_GEMINI_API_KEY});
 
   const generateBlog = async () => {
     try {
       if (generating) {
         return;
       }
-      if (keypoints.trim() === '' || apiKey.trim() === '' || title.trim() === '') {
+      if (keypoints.trim() === '' || title.trim() === '') {
         setGenerating(false);
-        alert('Title, keypoints, Api Key & length are required.');
+        alert('Title, keypoints & length are required.');
         return;
       }
-      // console.log(`Write a blog post about ${title}. Include the following keypoints: ${keypoints}. Add a proper Heading and subheadings for the blog post`)
       setGenerating(true)
-      const response = await axios.post('https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions', {
-        prompt: `Write a blog post about ${title.trim()} with proper Heading and subheadings in HTML code format. Include the following keypoints: ${keypoints.trim()}. Blog should not look incomplete. Use Paragraphs for each subheadings. `,
-        max_tokens: maxTokens,
-        temperature: 0.3,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${process.env.REACT_APP_OPENAPIKEY}`,
-          'Authorization': `Bearer ${apiKey.trim()}`,
-        },
-      });
-      // console.log(`response is ${JSON.stringify(response)}`)
-      if (response.data.choices && response.data.choices[0] && response.data.choices[0].text) {
-        const generatedBlog = response.data.choices[0].text;
+        const prompt = `
+            Write a complete blog post about "${title.trim()}" using the following keypoints: ${keypoints.trim()} and keep blog length of ${maxTokens} tokens nearly.
+            Format the blog in HTML and return only the content for the <body> section.
+            - Start with a main heading (<h1>) for the blog title.
+            - Use subheadings (<h2>, <h3> as needed) for each keypoint or section.
+            - Use <b> (bold) tags as needed to highlight headings, subheadings and important words or phrases.
+            - Write detailed paragraphs (<p>) under each subheading.
+            - Do not include <html>, <head>, or <body> tags—only the inner HTML for the body.
+            - Ensure the blog is well-structured, informative, and does not look incomplete.
+        `
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt
+      })
+      if (response.text) {
+        let generatedBlog = response.text;
+        // Remove ```html at the start and ``` at the end
+        generatedBlog = generatedBlog.replace(/^```html\s*/i, '').replace(/```$/i, '');
 
+        // Remove <body> and </body> tags if present
+        generatedBlog = generatedBlog.replace(/<\/?body>/gi, '').trim();
         setContent(generatedBlog);
         setGenerating(false)
       } else {
@@ -81,7 +88,20 @@ const WriteBlogs = () => {
         setGenerating(false)
       }
     } catch (error) {
-      alert('Error generating blog. Please try again.');
+      console.error('API Error:', error); // Log the full error for debugging
+      
+      // Check for API limit exceeded error
+      if (error.message && (
+          error.message.includes('quota') || 
+          error.message.includes('limit') || 
+          error.message.includes('exceeded') ||
+          error.message.includes('429') || // HTTP 429 is Too Many Requests
+          error.message.includes('403')    // HTTP 403 might indicate quota issues
+      )) {
+        alert('API limit exceeded. Please check your API key quota or try again later.');
+      } else {
+        alert('Error generating blog. Please try again.');
+      }
       setGenerating(false)
     }
   };
@@ -158,7 +178,7 @@ const WriteBlogs = () => {
           </div>
           <form>
             <div>
-              <label htmlFor="title">Title</label>
+              <label htmlFor="title">Title *</label>
               <input
                 type="text"
                 id="title"
@@ -169,7 +189,7 @@ const WriteBlogs = () => {
               />
             </div>
             <div>
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">Email *</label>
               <input
                 type="email"
                 id="email"
@@ -180,7 +200,7 @@ const WriteBlogs = () => {
               />
             </div>
             <div>
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">Password *</label>
               <input
                 type="password"
                 id="password"
@@ -201,7 +221,7 @@ const WriteBlogs = () => {
               />
             </div>
             <div>
-              <label htmlFor="blogContent">Blog Content</label>
+              <label htmlFor="blogContent">Blog Content *</label>
               <div style={{ marginTop: '8px' }}>
                 <JoditEditor
                   ref={editor}
@@ -223,7 +243,7 @@ const WriteBlogs = () => {
               <hr style={{ flex: 1, border: 'none', borderTop: '2px solid #ccc' }} />
             </div>
             <div>
-              <label htmlFor="keypoints">Generate with Keypoints</label>
+              <label htmlFor="keypoints">Generate with Keypoints *</label>
               <input
                 type="text"
                 id="keypoints"
@@ -234,7 +254,7 @@ const WriteBlogs = () => {
                 onChange={(e) => setKeypoints(e.target.value)}
               />
             </div>
-            <div>
+            {/* <div>
               <label htmlFor="apiKey">Api Key</label>
               <input
                 type="text"
@@ -245,9 +265,9 @@ const WriteBlogs = () => {
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
               />
-            </div>
+            </div> */}
             <div>
-              <label htmlFor="maxTokens">Set Length</label>
+              <label htmlFor="maxTokens">Set Length *</label>
               <input
                 type="number"
                 id="maxTokens"
