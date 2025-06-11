@@ -251,7 +251,8 @@ const AdminNavber = (props) => {
                   </span>
                   <span>Shop</span>
                 </span>
-                <span className="flex space-x-1 py-2 px-8 hover:bg-gray-400 cursor-pointer">
+                <span onClick ={(e) => history.push('/admin/dashboard/bankDetails')}
+                  className="flex space-x-1 py-2 px-8 hover:bg-gray-400 cursor-pointer">
                   <span>
                     <svg
                       className="w-6 h-6"
@@ -274,7 +275,7 @@ const AdminNavber = (props) => {
                       />
                     </svg>
                   </span>
-                  <span>Setting</span>
+                  <span>Account</span>
                 </span>
                 <span
                   onClick={(e) => logout()}
