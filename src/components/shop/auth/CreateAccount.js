@@ -12,11 +12,15 @@ const CreateAccount = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({}); // Track errors for inputs
+  const [errors, setErrors] = useState({});
   const [resendTimer, setResendTimer] = useState(60);
+  const [isSeller, setIsSeller] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const history = useHistory();
   const sitename = process.env.REACT_APP_BUSINESS_NAME;
   const businessProduct = process.env.REACT_APP_BUSINESS_PRODUCT;
+
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -39,6 +43,10 @@ const CreateAccount = () => {
         newErrors.confirmPassword = "Confirm Password is required";
       if (password && confirmPassword && password !== confirmPassword) {
         newErrors.confirmPassword = "Passwords do not match";
+      }
+      if (isSeller) {
+        if (!phone.trim()) newErrors.phone = "Phone number is required";
+        if (!address.trim()) newErrors.address = "Address is required";
       }
     }
     setErrors(newErrors);
@@ -78,14 +86,18 @@ const CreateAccount = () => {
           toast.error("OTP expired. Please try again.");
         }
       } else if (step === 3) {
-        const response = await signup({
+        const userData = {
           name,
           password,
           cPassword: confirmPassword,
-        });
+          userRole: isSeller ? 1 : 0,
+          ...(isSeller && { phone, address })
+        };
+        
+        const response = await signup(userData);
         if (response.status === 200) {
           localStorage.removeItem("tempjwt");
-          toast.success("Account created successfully!");
+          toast.success(`Account created successfully! ${isSeller ? "You can now sell your products." : ""}`);
           history.push("/");
         } else if(response.status === 409){
           toast.error("Email already exists. Please login.");
@@ -229,6 +241,50 @@ const CreateAccount = () => {
             {errors.confirmPassword && (
               <p className="text-red-500 text-sm mb-4">{errors.confirmPassword}</p>
             )}
+            
+            {/* Seller Account Checkbox */}
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={isSeller}
+                  onChange={(e) => setIsSeller(e.target.checked)}
+                  className="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span className="ml-2 text-gray-700">Do you want to create a seller account?</span>
+              </label>
+            </div>
+            
+            {/* Seller-specific fields */}
+            {isSeller && (
+              <>
+                <input
+                  type="tel"
+                  placeholder="Phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={`w-full p-3 border rounded-md mb-4 focus:outline-none focus:ring-2 ${
+                    errors.phone ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+                  }`}
+                />
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mb-4">{errors.phone}</p>
+                )}
+                <textarea
+                  placeholder="Business address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className={`w-full p-3 border rounded-md mb-4 focus:outline-none focus:ring-2 ${
+                    errors.address ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+                  }`}
+                  rows={3}
+                />
+                {errors.address && (
+                  <p className="text-red-500 text-sm mb-4">{errors.address}</p>
+                )}
+              </>
+            )}
+            
             <button
               onClick={handleNextStep}
               disabled={isLoading}
@@ -247,7 +303,6 @@ const CreateAccount = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-yellow-300">
-
       <div className="flex flex-col md:flex-row bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Left Section */}
         <div className="md:w-1/2 p-8 bg-gradient-to-r from-blue-600 to-indigo-700 text-black flex flex-col justify-center">
@@ -260,6 +315,9 @@ const CreateAccount = () => {
               <li>📚 Discover a wide range of {businessProduct}s across various genres.</li>
               <li>💸 Enjoy exclusive discounts and offers.</li>
               <li>🤝 Join our community of {businessProduct} lovers today!</li>
+              {isSeller && (
+                <li className="font-bold">💰 Sell your {businessProduct}s and reach thousands of customers!</li>
+              )}
             </ul>
             <button className="mt-6 px-6 py-3 bg-white text-blue-700 font-semibold rounded-lg shadow hover:bg-blue-200"
               onClick={() => history.push("/")}
@@ -278,7 +336,6 @@ const CreateAccount = () => {
         </div>
       </div>
     </div>
-  
   );
 };
 

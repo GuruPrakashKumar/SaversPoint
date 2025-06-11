@@ -56,8 +56,8 @@ export const otpVerification = async ({ email, otp }) => {
     console.log(error);
   }
 }
-export const signup = async ({ name, password, cPassword }) => {
-  const data = { name, password, cPassword };
+export const signup = async ({ name, password, cPassword, userRole, phone, address }) => {
+  const data = { name, password, cPassword, userRole, phone, address };
   try {
     let res = await axios.post(`${apiURL}/api/signup`, data, Headers());
     return res;
