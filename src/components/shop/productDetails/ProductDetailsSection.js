@@ -13,6 +13,7 @@ import { updateQuantity, slideImage, addToCart, cartList } from "./Mixins";
 import { totalCost } from "../partials/Mixins";
 import { useToast } from "../../../context/ToastContext";
 import { bidSubmitHanlder, updateBid } from "./Action";
+import { getUserById } from "../dashboardUser/FetchApi";
 
 const apiURL = process.env.REACT_APP_API_URL;
 
@@ -32,6 +33,12 @@ const ProductDetailsSection = (props) => {
 
   const [inputBidPrice, setInputBidPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [sellerInfo, setSellerInfo] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    email: ""
+  })
   const [fData, setFdata] = useState({
       bId: "",
       userBid: inputBidPrice,
@@ -80,6 +87,16 @@ const ProductDetailsSection = (props) => {
     dispatch({ type: "loading", payload: true });
     try {
       let responseData = await getSingleProduct(id);
+      const sellerData = await getUserById(responseData.Product.pSeller);
+      setSellerInfo({
+        ...sellerInfo,
+        name: sellerData.User.name,
+        phone: sellerData.User.phoneNumber,
+        email: sellerData.User.email,
+        address: sellerData.User.address
+      })
+      
+      console.log('seller data: ', sellerData.User)
       setTimeout(() => {
         if (responseData.Product) {
           layoutDispatch({
@@ -620,8 +637,55 @@ const ProductDetailsSection = (props) => {
                 </div>
               )}
             </div>
+            {/* Add the seller information section */}
+            <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-xl font-semibold mb-4">Seller Information</h3>
+              
+              {isLoading ? (
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : sellerInfo ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Seller Name</h4>
+                    <p className="text-lg">{sellerInfo.name || 'Not available'}</p>
+                  </div>
+                  
+                  {sellerInfo.phone && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Contact Number</h4>
+                      <p className="text-lg">{sellerInfo.phone}</p>
+                    </div>
+                  )}
+                  
+                  {sellerInfo.address && (
+                    <div className="md:col-span-2">
+                      <h4 className="text-sm font-medium text-gray-500">Address</h4>
+                      <p className="text-lg">{sellerInfo.address}</p>
+                    </div>
+                  )}
+                  {sellerInfo.email && (
+                    <div className="md:col-span-2">
+                      <h4 className="text-sm font-medium text-gray-500">Email</h4>
+                      <p className="text-lg">{sellerInfo.email}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-500">Seller information not available</p>
+              )}
+              
+              <button 
+                className="mt-4 px-4 py-2 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition"
+                onClick={() => showInfoToast('Contact seller feature coming soon!')}
+              >
+                Contact Seller
+              </button>
+            </div>
           </div>
         </div>
+          
       </section>
       {/* Product Details Section two */}
       <ProductDetailsSectionTwo />
