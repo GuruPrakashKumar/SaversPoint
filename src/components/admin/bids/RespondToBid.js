@@ -45,7 +45,6 @@ const RespondToBid = () => {
             >
               <option value="accept">Accept Bid</option>
               <option value="reject">Reject Bid</option>
-              <option value="counter">Counter Offer</option>
             </select>
           </div>
 
